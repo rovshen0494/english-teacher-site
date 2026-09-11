@@ -10,7 +10,11 @@ interface ContactPayload {
   message?: string;
 }
 
-const NOTIFY_EMAILS = ["bmammet09@gmail.com", "rovshen0494@gmail.com"];
+// Resend's sandbox sender (no verified domain) can only deliver to the email
+// address that owns the Resend account. Add bmammet09@gmail.com here once a
+// custom domain is verified at resend.com/domains and the `from` address below
+// is updated to use it.
+const NOTIFY_EMAILS = ["rovshen0494@gmail.com"];
 
 export async function POST(request: Request) {
   const body: ContactPayload = await request.json();

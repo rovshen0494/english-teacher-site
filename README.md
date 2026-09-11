@@ -48,9 +48,11 @@ Search the codebase for `[Placeholder` to find what's still unfilled:
 Submissions from the "Get in Touch" form (`src/components/ContactForm.tsx`) POST to `src/app/api/contact/route.ts`, which:
 
 1. Saves the message to the `contact_submissions` table (visible at `/admin/messages`, with unread/read tracking) — this always happens, regardless of email configuration.
-2. If `RESEND_API_KEY` is set, also emails a notification to `bmammet09@gmail.com` and `rovshen0494@gmail.com` via [Resend](https://resend.com), using their shared `onboarding@resend.dev` sender (no domain verification needed). If sending fails or the key isn't set, the submission is still saved — email is a best-effort notification, not the source of truth.
+2. If `RESEND_API_KEY` is set, also emails a notification via [Resend](https://resend.com) using their `onboarding@resend.dev` sandbox sender. If sending fails or the key isn't set, the submission is still saved — email is a best-effort notification, not the source of truth.
 
-To enable email notifications: create a Resend account, generate an API key (Dashboard → API Keys), and set `RESEND_API_KEY` in `.env.local` and in Vercel's project environment variables.
+**Resend sandbox limitation:** without a verified domain, Resend's sandbox sender can only deliver to the email address that owns the Resend account — currently `rovshen0494@gmail.com` (see `NOTIFY_EMAILS` in the route). To also notify `bmammet09@gmail.com`, verify a custom domain at resend.com/domains, update the `from` address in `src/app/api/contact/route.ts` to use it, and add her email back to `NOTIFY_EMAILS`.
+
+To (re)configure: create a Resend account, generate an API key (Dashboard → API Keys), and set `RESEND_API_KEY` in `.env.local` and in Vercel's project environment variables.
 
 ## Database schema
 
