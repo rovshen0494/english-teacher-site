@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fbfaf7;
+  --foreground: #10213a;
+
+  --color-brand-50: #eefaf7;
+  --color-brand-100: #d4f0ea;
+  --color-brand-200: #a9e1d6;
+  --color-brand-300: #7ccdbe;
+  --color-brand-400: #4bb1a1;
+  --color-brand-500: #2f9284;
+  --color-brand-600: #1f7568;
+  --color-brand-700: #195e54;
+  --color-brand-800: #164a43;
+  --color-brand-900: #123c37;
+
+  --color-accent-50: #fff4e6;
+  --color-accent-100: #ffe4bf;
+  --color-accent-200: #ffcb85;
+  --color-accent-300: #ffab4d;
+  --color-accent-400: #ff8f2e;
+  --color-accent-500: #f4791a;
+  --color-accent-600: #d9640f;
+  --color-accent-700: #b34f0c;
+
+  --color-ink-900: #10213a;
+  --color-ink-800: #172d4d;
+  --color-ink-700: #33455e;
+  --color-ink-500: #5b6b82;
+  --color-ink-300: #93a1b5;
+  --color-ink-100: #e3e8ef;
+
+  --color-kid-yellow: #ffd166;
+  --color-kid-coral: #ff6b6b;
+  --color-kid-sky: #4ecdc4;
+  --color-kid-purple: #a78bfa;
+  --color-kid-green: #8ce99a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+
+  --color-brand-50: var(--color-brand-50);
+  --color-brand-100: var(--color-brand-100);
+  --color-brand-200: var(--color-brand-200);
+  --color-brand-300: var(--color-brand-300);
+  --color-brand-400: var(--color-brand-400);
+  --color-brand-500: var(--color-brand-500);
+  --color-brand-600: var(--color-brand-600);
+  --color-brand-700: var(--color-brand-700);
+  --color-brand-800: var(--color-brand-800);
+  --color-brand-900: var(--color-brand-900);
+
+  --color-accent-50: var(--color-accent-50);
+  --color-accent-100: var(--color-accent-100);
+  --color-accent-200: var(--color-accent-200);
+  --color-accent-300: var(--color-accent-300);
+  --color-accent-400: var(--color-accent-400);
+  --color-accent-500: var(--color-accent-500);
+  --color-accent-600: var(--color-accent-600);
+  --color-accent-700: var(--color-accent-700);
+
+  --color-ink-900: var(--color-ink-900);
+  --color-ink-800: var(--color-ink-800);
+  --color-ink-700: var(--color-ink-700);
+  --color-ink-500: var(--color-ink-500);
+  --color-ink-300: var(--color-ink-300);
+  --color-ink-100: var(--color-ink-100);
+
+  --color-kid-yellow: var(--color-kid-yellow);
+  --color-kid-coral: var(--color-kid-coral);
+  --color-kid-sky: var(--color-kid-sky);
+  --color-kid-purple: var(--color-kid-purple);
+  --color-kid-green: var(--color-kid-green);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.prose {
+  color: var(--color-ink-700);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.prose h2 {
+  margin-top: 2.25em;
+  margin-bottom: 0.75em;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+.prose h2:first-child {
+  margin-top: 0;
+}
+.prose h3 {
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.prose p {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+.prose ul,
+.prose ol {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+.prose ul {
+  list-style-type: disc;
+}
+.prose ol {
+  list-style-type: decimal;
+}
+.prose li {
+  margin-top: 0.375em;
+  margin-bottom: 0.375em;
+}
+.prose strong {
+  font-weight: 600;
+  color: var(--color-ink-900);
+}
+.prose a {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
