@@ -5,12 +5,10 @@ import Container from "@/components/Container";
 import Tag from "@/components/Tag";
 import ResourceCard from "@/components/ResourceCard";
 import { PrintButton, FavouriteButton } from "@/components/ResourceActions";
-import { getAllResources, getRelatedResources, getResourceBySlug } from "@/lib/resources";
+import { getRelatedResources, getResourceBySlug } from "@/lib/resources";
 import { AGE_GROUP_LABELS } from "@/lib/constants";
 
-export function generateStaticParams() {
-  return getAllResources().map((r) => ({ slug: r.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -18,7 +16,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const resource = getResourceBySlug(slug);
+  const resource = await getResourceBySlug(slug);
   if (!resource) return {};
   return {
     title: resource.title,
@@ -33,10 +31,10 @@ export async function generateMetadata({
 
 export default async function ResourceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const resource = getResourceBySlug(slug);
+  const resource = await getResourceBySlug(slug);
   if (!resource) notFound();
 
-  const related = getRelatedResources(resource);
+  const related = await getRelatedResources(resource);
 
   return (
     <Container className="py-16 sm:py-20">

@@ -76,6 +76,7 @@ export interface ResourceFrontmatter {
 }
 
 export interface Resource extends ResourceFrontmatter {
+  body: string;
   bodyHtml: string;
 }
 
@@ -97,5 +98,17 @@ export interface BlogFrontmatter {
 }
 
 export interface BlogPost extends BlogFrontmatter {
+  body: string;
   bodyHtml: string;
+}
+
+export interface GalleryItem {
+  id: string;
+  type: "photo" | "video";
+  src: string;
+  poster?: string;
+  width: number;
+  height: number;
+  alt: string;
+  sortOrder: number;
 }

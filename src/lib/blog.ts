@@ -1,34 +1,64 @@
-import { readContentDir, readContentFile } from "./markdown";
+import { marked } from "marked";
+import { createClient } from "./supabase/server";
 import { getResourceBySlug } from "./resources";
-import type { BlogFrontmatter, BlogPost, Resource } from "./types";
+import type { BlogPost, Resource } from "./types";
 
-const DIR = "blog";
+marked.setOptions({ gfm: true, breaks: false });
 
-let cache: BlogPost[] | null = null;
-
-export function getAllPosts(): BlogPost[] {
-  if (cache && process.env.NODE_ENV === "production") return cache;
-  const files = readContentDir(DIR);
-  const posts = files.map((file) => {
-    const { data, bodyHtml } = readContentFile<BlogFrontmatter>(DIR, file);
-    return { ...data, bodyHtml };
-  });
-  posts.sort((a, b) => (a.date < b.date ? 1 : -1));
-  cache = posts;
-  return posts;
+interface BlogPostRow {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  date: string;
+  author: string;
+  related_resources: string[];
+  featured: boolean;
+  body: string;
 }
 
-export function getPostBySlug(slug: string): BlogPost | undefined {
-  return getAllPosts().find((p) => p.slug === slug);
+function mapRow(row: BlogPostRow): BlogPost {
+  return {
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt,
+    category: row.category,
+    date: row.date,
+    author: row.author,
+    relatedResources: row.related_resources,
+    featured: row.featured,
+    body: row.body ?? "",
+    bodyHtml: marked.parse(row.body ?? "", { async: false }) as string,
+  };
 }
 
-export function getPostsByCategory(category: string): BlogPost[] {
-  return getAllPosts().filter((p) => p.category === category);
+export async function getAllPosts(): Promise<BlogPost[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("blog_posts").select("*").order("date", { ascending: false });
+  if (error) throw error;
+  return (data as BlogPostRow[]).map(mapRow);
 }
 
-export function getRelatedResourcesForPost(post: BlogPost): Resource[] {
+export async function getPostBySlug(slug: string): Promise<BlogPost | undefined> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("blog_posts").select("*").eq("slug", slug).maybeSingle();
+  if (error) throw error;
+  return data ? mapRow(data as BlogPostRow) : undefined;
+}
+
+export async function getPostsByCategory(category: string): Promise<BlogPost[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("category", category)
+    .order("date", { ascending: false });
+  if (error) throw error;
+  return (data as BlogPostRow[]).map(mapRow);
+}
+
+export async function getRelatedResourcesForPost(post: BlogPost): Promise<Resource[]> {
   if (!post.relatedResources?.length) return [];
-  return post.relatedResources
-    .map((slug) => getResourceBySlug(slug))
-    .filter((r): r is Resource => Boolean(r));
+  const resources = await Promise.all(post.relatedResources.map((slug) => getResourceBySlug(slug)));
+  return resources.filter((r): r is Resource => Boolean(r));
 }

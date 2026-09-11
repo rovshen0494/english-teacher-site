@@ -4,11 +4,9 @@ import { notFound } from "next/navigation";
 import Container from "@/components/Container";
 import Tag from "@/components/Tag";
 import ResourceCard from "@/components/ResourceCard";
-import { getAllPosts, getPostBySlug, getRelatedResourcesForPost } from "@/lib/blog";
+import { getPostBySlug, getRelatedResourcesForPost } from "@/lib/blog";
 
-export function generateStaticParams() {
-  return getAllPosts().map((p) => ({ slug: p.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -16,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
   if (!post) return {};
   return {
     title: post.title,
@@ -27,10 +25,10 @@ export async function generateMetadata({
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
   if (!post) notFound();
 
-  const related = getRelatedResourcesForPost(post);
+  const related = await getRelatedResourcesForPost(post);
 
   return (
     <Container className="py-16 sm:py-20">

@@ -3,11 +3,10 @@ import { notFound } from "next/navigation";
 import Container from "@/components/Container";
 import SectionHeading from "@/components/SectionHeading";
 import ResourceCard from "@/components/ResourceCard";
-import { COLLECTIONS, getCollectionBySlug, getResourcesByCollection } from "@/lib/resources";
+import { getResourcesByCollection } from "@/lib/resources";
+import { getCollectionBySlug } from "@/lib/collections";
 
-export function generateStaticParams() {
-  return COLLECTIONS.map((c) => ({ slug: c.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -15,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const collection = getCollectionBySlug(slug);
+  const collection = await getCollectionBySlug(slug);
   if (!collection) return {};
   return {
     title: collection.title,
@@ -25,10 +24,10 @@ export async function generateMetadata({
 
 export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const collection = getCollectionBySlug(slug);
+  const collection = await getCollectionBySlug(slug);
   if (!collection) notFound();
 
-  const resources = getResourcesByCollection(slug);
+  const resources = await getResourcesByCollection(slug);
 
   return (
     <Container className="py-16 sm:py-20">

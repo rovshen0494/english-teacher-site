@@ -6,6 +6,8 @@ import Tag from "@/components/Tag";
 import { BLOG_CATEGORIES } from "@/lib/constants";
 import { getAllPosts } from "@/lib/blog";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Blog",
   description:
@@ -18,7 +20,8 @@ export default async function BlogPage({
   searchParams: Promise<{ category?: string }>;
 }) {
   const { category } = await searchParams;
-  const posts = getAllPosts().filter((p) => !category || p.category === category);
+  const allPosts = await getAllPosts();
+  const posts = allPosts.filter((p) => !category || p.category === category);
 
   return (
     <Container className="py-16 sm:py-20">

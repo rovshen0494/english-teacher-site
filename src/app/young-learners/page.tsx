@@ -7,6 +7,8 @@ import Link from "next/link";
 import { getResourcesByAgeGroup } from "@/lib/resources";
 import type { AgeGroup } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Young Learners & Teenagers",
   description:
@@ -65,7 +67,11 @@ const AGE_SECTIONS: {
   },
 ];
 
-export default function YoungLearnersPage() {
+export default async function YoungLearnersPage() {
+  const resourcesByAge = await Promise.all(
+    AGE_SECTIONS.map((section) => getResourcesByAgeGroup(section.age))
+  );
+
   return (
     <>
       <section className="py-16 sm:py-20">
@@ -107,8 +113,8 @@ export default function YoungLearnersPage() {
         </Container>
       </section>
 
-      {AGE_SECTIONS.map((section) => {
-        const resources = getResourcesByAgeGroup(section.age);
+      {AGE_SECTIONS.map((section, index) => {
+        const resources = resourcesByAge[index];
         return (
           <section key={section.id} id={section.id} className="scroll-mt-24 py-12 sm:py-14">
             <Container>

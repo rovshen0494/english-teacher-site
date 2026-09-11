@@ -6,7 +6,9 @@ import PlaceholderNote from "@/components/PlaceholderNote";
 import Button from "@/components/Button";
 import ClassroomGallery from "@/components/ClassroomGallery";
 import { SITE } from "@/lib/constants";
-import { CLASSROOM_MEDIA } from "@/content/gallery/classroom-media";
+import { getGalleryItems } from "@/lib/gallery";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "About Me",
@@ -35,7 +37,8 @@ const PHILOSOPHY = [
 
 const WHO_I_TEACH = ["Ages 3-5", "Ages 6-8", "Ages 9-12", "Ages 13-17", "Adults", "IELTS & TOEFL Students"];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const galleryItems = await getGalleryItems();
   return (
     <>
       <section className="py-16 sm:py-20">
@@ -96,7 +99,7 @@ export default function AboutPage() {
             description="A few real moments from recent lessons — no stock photos."
           />
           <div className="mt-10">
-            <ClassroomGallery items={CLASSROOM_MEDIA} />
+            <ClassroomGallery items={galleryItems} />
           </div>
         </Container>
       </section>

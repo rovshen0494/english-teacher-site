@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 import { SITE } from "@/lib/constants";
 import { getAllResources } from "@/lib/resources";
 import { getAllPosts } from "@/lib/blog";
-import { COLLECTIONS } from "@/lib/resources";
+import { getCollections } from "@/lib/collections";
 import { GAMES } from "@/lib/games";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     "",
     "/about",
@@ -26,17 +26,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
   }));
 
-  const resourceRoutes = getAllResources().map((r) => ({
+  const [resources, collections, posts] = await Promise.all([
+    getAllResources(),
+    getCollections(),
+    getAllPosts(),
+  ]);
+
+  const resourceRoutes = resources.map((r) => ({
     url: `${SITE.url}/resources/${r.slug}`,
     lastModified: r.lastUpdated,
   }));
 
-  const collectionRoutes = COLLECTIONS.map((c) => ({
+  const collectionRoutes = collections.map((c) => ({
     url: `${SITE.url}/resources/collections/${c.slug}`,
     lastModified: new Date(),
   }));
 
-  const blogRoutes = getAllPosts().map((p) => ({
+  const blogRoutes = posts.map((p) => ({
     url: `${SITE.url}/blog/${p.slug}`,
     lastModified: p.date,
   }));

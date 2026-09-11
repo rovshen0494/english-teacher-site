@@ -8,6 +8,8 @@ import ResourceCard from "@/components/ResourceCard";
 import { getFeaturedResources } from "@/lib/resources";
 import { GAMES } from "@/lib/games";
 
+export const dynamic = "force-dynamic";
+
 const WHAT_I_TEACH = [
   {
     title: "Young Learners",
@@ -46,8 +48,8 @@ const RESOURCE_FILTER_CHIPS = [
   { label: "Grammar", param: "skill", value: "Grammar" },
 ];
 
-export default function HomePage() {
-  const featured = getFeaturedResources(8);
+export default async function HomePage() {
+  const featured = await getFeaturedResources(8);
 
   return (
     <>

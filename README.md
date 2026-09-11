@@ -1,6 +1,6 @@
 # English Teacher & IELTS/TOEFL Instructor Website
 
-A Next.js (App Router) site for Balgyz Mammetyarova, built around a scalable teaching-resource library and blog.
+A Next.js (App Router) site for Balgyz Mammetyarova, backed by Supabase (Postgres + Auth + Storage) with an admin panel for managing all content.
 
 ## Getting Started
 
@@ -10,6 +10,23 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+Requires `.env.local` with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (already set up in this environment; see Vercel project settings for production values).
+
+## Admin panel
+
+Go to `/admin/login` and sign in (currently `rovshen0494@gmail.com`). From there you can create, edit and delete:
+
+- **Resources** (`/admin/resources`)
+- **Blog posts** (`/admin/blog`)
+- **Collections** (`/admin/collections`)
+- **Gallery photos/videos** (`/admin/gallery`) — uploads go straight to Supabase Storage; width/height and video poster thumbnails are generated automatically in the browser at upload time.
+
+Access is enforced by Postgres Row Level Security: anyone can read (`select`) the public tables, but writes require a logged-in session whose email matches the hardcoded admin email in the RLS policies (see `supabase/migrations/`). There's no separate roles table since there is exactly one admin.
+
+To change the admin email, add a new migration that drops and recreates the `*_admin_insert/update/delete` policies (on `resources`, `blog_posts`, `collections`, `gallery_items`, and `storage.objects`) with the new email, then create the corresponding Supabase Auth user and confirm it.
+
+Public pages that read from Supabase are rendered with `export const dynamic = "force-dynamic"` so admin edits appear immediately, with no redeploy needed.
 
 ## Remaining placeholder content
 
@@ -24,73 +41,34 @@ Search the codebase for `[Placeholder` to find what's still unfilled:
 
 ## Photo
 
-`public/images/balgyz-mammetyarova.png` is used by the `TeacherPhoto` component (Home hero, About page). Replace the file directly to update it — no code changes needed as long as the filename stays the same.
+`public/images/balgyz-mammetyarova.png` (About page) and `public/images/balgyz-mammetyarova-home.png` (Home hero) are used by the `TeacherPhoto` component. Replace the files directly to update them — no code changes needed as long as the filenames stay the same.
 
-## Adding a teaching resource
+## Database schema
 
-Add a new Markdown file to `src/content/resources/`, e.g. `src/content/resources/my-new-game.md`:
+See `supabase/migrations/`. Four tables — `resources`, `blog_posts`, `collections`, `gallery_items` — plus a `gallery` Storage bucket. Apply new migrations with:
 
-```markdown
----
-title: "My New Game"
-slug: "my-new-game"
-description: "One or two sentences shown on resource cards."
-resourceType: "Game"
-ageGroups: ["Ages 6-8"]
-englishLevels: ["A1 Beginner"]
-primarySkill: "Vocabulary"
-secondarySkills: ["Speaking"]
-topics: ["Animals"]
-duration: "15 minutes"
-classSize: "4-20"
-prepTime: "5 minutes"
-difficulty: "Easy"
-materials: ["..."]
-relatedResources: ["word-bingo"]
-collections: ["vocabulary-games"]
-downloads:
-  - label: "Teacher Instructions"
-    fileType: "PDF"
-    url: "/downloads/placeholder-resource.pdf"
-author: "[Teacher Name]"
-dateCreated: "2026-01-01"
-lastUpdated: "2026-01-01"
-featured: false
----
-
-## Learning Objective
-...
-
-## Materials
-...
-
-## How It Works
-1. ...
-
-## Student Instructions
-...
-
-## Variations
-...
-
-## Extension Activity
-...
-
-## Teacher Tip
-...
+```bash
+SUPABASE_ACCESS_TOKEN=... npx supabase db push
 ```
 
-Valid values for each field live in `src/lib/types.ts` (unions) and `src/lib/constants.ts` (arrays used by filters). The resource appears automatically in `/resources`, its age-group page, and any collection listed once the file is saved — no code changes needed.
+## Working around restrictive networks
 
-Run `node scripts/validate-content.mjs` after adding resources to check every field value matches the allowed types.
+This project is developed on a network where only port 443 is open and a local SOCKS5 proxy (`Happ`, listening on `127.0.0.1:10808`) is required for most outbound traffic — including to Supabase and Vercel, which aren't reachable directly even with the VPN's own default routing. Two scripts route around this for local tooling:
 
-## Adding a blog post
+- `scripts/socks-fetch.mjs` — a `fetch` replacement (via `node-fetch` + `socks-proxy-agent`) that tunnels through the local SOCKS proxy. Pass it as `global: { fetch: socksFetch }` when creating a Supabase client in a standalone Node script.
+- `scripts/run-sql.mjs` — runs arbitrary SQL against the linked Supabase project via the Management API (`POST /v1/projects/:ref/database/query`), since the `supabase` CLI binary doesn't respect the SOCKS proxy. Usage: `SUPABASE_ACCESS_TOKEN=... node scripts/run-sql.mjs "<SQL or path to .sql file>"`.
 
-Add a Markdown file to `src/content/blog/` with `title`, `slug`, `excerpt`, `category` (see `BLOG_CATEGORIES` in `src/lib/constants.ts`), `date`, `author`, and optional `relatedResources` (an array of resource slugs) in the frontmatter, followed by the article body in Markdown.
+`npm` itself was pointed at the proxy once via `npm config set proxy/https-proxy socks5://127.0.0.1:10808` (a global npm config change, not project-specific).
+
+The Next.js app itself (dev server and production) does **not** need this workaround — Vercel's servers have normal internet access. When testing locally hits connectivity issues, it's faster to push and verify against the live Vercel deployment than to debug the local network.
+
+## Adding a teaching resource, blog post or collection
+
+Use the admin panel (`/admin`) — there's no longer a Markdown/file-based workflow. The migration script (`scripts/migrate-to-supabase.mjs`) is kept for reference; it was a one-time import from the old Markdown content system into Supabase and isn't part of the normal workflow anymore.
 
 ## Architecture notes
 
-- Content lives in Markdown files with YAML frontmatter (`src/content/resources`, `src/content/blog`), parsed with `gray-matter` and rendered with `marked` — no database required, and it scales to hundreds of files without changes to the code.
-- `src/lib/resources.ts` and `src/lib/blog.ts` are the only places that read from `src/content/` — all pages go through these.
-- The AI Resource Generator (`/resources/create`) and AI Lesson Builder (`/resources/lesson-builder`) are UI previews only; no AI API is connected. Wiring one up later means adding a server action/route that writes a new Markdown file for teacher review before publishing — never publishing automatically.
+- `src/lib/resources.ts`, `blog.ts`, `collections.ts`, `gallery.ts` are the only places that query Supabase for public content — all pages and admin forms go through these (or the browser Supabase client directly for admin writes).
+- `src/lib/supabase/client.ts` (browser) and `server.ts` (Server Components, via `@supabase/ssr`) are the two ways the app talks to Supabase; `src/proxy.ts` refreshes the auth session on every request and gates `/admin/*`.
+- The AI Resource Generator (`/resources/create`) and AI Lesson Builder (`/resources/lesson-builder`) are UI previews only; no AI API is connected. Wiring one up later means writing a draft row with a `status: "draft"`-style flag for teacher review before publishing — never publishing automatically.
 - The contact form posts to `src/app/api/contact/route.ts`, which currently only logs submissions. Connect a real email provider there before launch.

@@ -6,6 +6,8 @@ import ResourceCard from "@/components/ResourceCard";
 import PlaceholderNote from "@/components/PlaceholderNote";
 import { getFeaturedResources } from "@/lib/resources";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "For Schools & Recruiters",
   description:
@@ -56,8 +58,8 @@ const WHY_WORK_WITH_ME = [
   },
 ];
 
-export default function ForSchoolsPage() {
-  const sample = getFeaturedResources(3);
+export default async function ForSchoolsPage() {
+  const sample = await getFeaturedResources(3);
 
   return (
     <>

@@ -6,6 +6,8 @@ import Button from "@/components/Button";
 import ResourceCard from "@/components/ResourceCard";
 import { getResourcesByAgeGroup } from "@/lib/resources";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "IELTS & TOEFL Preparation",
   description:
@@ -42,8 +44,8 @@ const RESOURCE_CATEGORIES = [
   { label: "Exam Strategies", href: "/resources/ielts-exam-strategy-time-management" },
 ];
 
-export default function IeltsPage() {
-  const ieltsResources = getResourcesByAgeGroup("IELTS");
+export default async function IeltsPage() {
+  const ieltsResources = await getResourcesByAgeGroup("IELTS");
 
   return (
     <>

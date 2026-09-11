@@ -4,7 +4,10 @@ import Link from "next/link";
 import Container from "@/components/Container";
 import SectionHeading from "@/components/SectionHeading";
 import ResourceLibrary from "@/components/ResourceLibrary";
-import { COLLECTIONS, getAllResources } from "@/lib/resources";
+import { getAllResources } from "@/lib/resources";
+import { getCollections } from "@/lib/collections";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "English Teaching Resources",
@@ -12,8 +15,8 @@ export const metadata: Metadata = {
     "Browse a searchable library of English teaching resources — games, lesson plans, worksheets, flashcards and IELTS/TOEFL materials for young learners, teenagers, adults and exam candidates.",
 };
 
-export default function ResourcesPage() {
-  const resources = getAllResources();
+export default async function ResourcesPage() {
+  const [resources, collections] = await Promise.all([getAllResources(), getCollections()]);
 
   return (
     <Container className="py-16 sm:py-20">
@@ -57,7 +60,7 @@ export default function ResourcesPage() {
       <div className="mt-20">
         <SectionHeading eyebrow="Browse by Purpose" title="Collections" />
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {COLLECTIONS.map((collection) => (
+          {collections.map((collection) => (
             <Link
               key={collection.slug}
               href={`/resources/collections/${collection.slug}`}

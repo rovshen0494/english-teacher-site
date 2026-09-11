@@ -1,55 +1,124 @@
-import { readContentDir, readContentFile } from "./markdown";
+import { marked } from "marked";
+import { createClient } from "./supabase/server";
 import type {
   AgeGroup,
-  CollectionMeta,
   Difficulty,
   EnglishLevel,
   Resource,
-  ResourceFrontmatter,
   ResourceType,
   Skill,
 } from "./types";
 
-const DIR = "resources";
+marked.setOptions({ gfm: true, breaks: false });
 
-let cache: Resource[] | null = null;
-
-export function getAllResources(): Resource[] {
-  // Content files can change between requests during local development
-  // (editing markdown shouldn't require a server restart), so only cache in production.
-  if (cache && process.env.NODE_ENV === "production") return cache;
-  const files = readContentDir(DIR);
-  const resources = files.map((file) => {
-    const { data, bodyHtml } = readContentFile<ResourceFrontmatter>(DIR, file);
-    return { ...data, bodyHtml };
-  });
-  resources.sort((a, b) => (a.title > b.title ? 1 : -1));
-  cache = resources;
-  return resources;
+interface ResourceRow {
+  slug: string;
+  title: string;
+  description: string;
+  resource_type: string;
+  age_groups: string[];
+  english_levels: string[];
+  primary_skill: string;
+  secondary_skills: string[];
+  topics: string[];
+  duration: string;
+  class_size: string;
+  prep_time: string;
+  difficulty: string;
+  materials: string[];
+  related_resources: string[];
+  collections: string[];
+  downloads: { label: string; fileType: string; url: string }[];
+  author: string;
+  date_created: string;
+  last_updated: string;
+  featured: boolean;
+  body: string;
 }
 
-export function getResourceBySlug(slug: string): Resource | undefined {
-  return getAllResources().find((r) => r.slug === slug);
+function mapRow(row: ResourceRow): Resource {
+  return {
+    slug: row.slug,
+    title: row.title,
+    description: row.description,
+    resourceType: row.resource_type as ResourceType,
+    ageGroups: row.age_groups as AgeGroup[],
+    englishLevels: row.english_levels as EnglishLevel[],
+    primarySkill: row.primary_skill as Skill,
+    secondarySkills: row.secondary_skills as Skill[],
+    topics: row.topics,
+    duration: row.duration,
+    classSize: row.class_size,
+    prepTime: row.prep_time,
+    difficulty: row.difficulty as Difficulty,
+    materials: row.materials,
+    relatedResources: row.related_resources,
+    collections: row.collections,
+    downloads: row.downloads as Resource["downloads"],
+    author: row.author,
+    dateCreated: row.date_created,
+    lastUpdated: row.last_updated,
+    featured: row.featured,
+    body: row.body ?? "",
+    bodyHtml: marked.parse(row.body ?? "", { async: false }) as string,
+  };
 }
 
-export function getFeaturedResources(limit?: number): Resource[] {
-  const featured = getAllResources().filter((r) => r.featured);
-  return limit ? featured.slice(0, limit) : featured;
+export async function getAllResources(): Promise<Resource[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("resources").select("*").order("title", { ascending: true });
+  if (error) throw error;
+  return (data as ResourceRow[]).map(mapRow);
 }
 
-export function getRelatedResources(resource: Resource): Resource[] {
+export async function getResourceBySlug(slug: string): Promise<Resource | undefined> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("resources").select("*").eq("slug", slug).maybeSingle();
+  if (error) throw error;
+  return data ? mapRow(data as ResourceRow) : undefined;
+}
+
+export async function getFeaturedResources(limit?: number): Promise<Resource[]> {
+  const supabase = await createClient();
+  let query = supabase.from("resources").select("*").eq("featured", true).order("title", { ascending: true });
+  if (limit) query = query.limit(limit);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data as ResourceRow[]).map(mapRow);
+}
+
+export async function getRelatedResources(resource: Resource): Promise<Resource[]> {
   if (!resource.relatedResources?.length) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("resources").select("*").in("slug", resource.relatedResources);
+  if (error) throw error;
+  const bySlug = new Map((data as ResourceRow[]).map((r) => [r.slug, r]));
   return resource.relatedResources
-    .map((slug) => getResourceBySlug(slug))
-    .filter((r): r is Resource => Boolean(r));
+    .map((slug) => bySlug.get(slug))
+    .filter((r): r is ResourceRow => Boolean(r))
+    .map(mapRow);
 }
 
-export function getResourcesByAgeGroup(age: AgeGroup): Resource[] {
-  return getAllResources().filter((r) => r.ageGroups.includes(age));
+export async function getResourcesByAgeGroup(age: AgeGroup): Promise<Resource[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("resources")
+    .select("*")
+    .contains("age_groups", [age])
+    .order("title", { ascending: true });
+  if (error) throw error;
+  return (data as ResourceRow[]).map(mapRow);
 }
 
-export function getResourcesByCollection(collectionSlug: string): Resource[] {
-  return getAllResources().filter((r) => r.collections?.includes(collectionSlug));
+export async function getResourcesByCollection(collectionSlug: string): Promise<Resource[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("resources")
+    .select("*")
+    .contains("collections", [collectionSlug])
+    .order("title", { ascending: true });
+  if (error) throw error;
+  return (data as ResourceRow[]).map(mapRow);
 }
 
 export interface ResourceFilters {
@@ -62,8 +131,8 @@ export interface ResourceFilters {
   difficulty?: Difficulty;
 }
 
-export function filterResources(filters: ResourceFilters): Resource[] {
-  const all = getAllResources();
+export async function filterResources(filters: ResourceFilters): Promise<Resource[]> {
+  const all = await getAllResources();
   const query = filters.query?.trim().toLowerCase();
 
   return all.filter((r) => {
@@ -80,61 +149,4 @@ export function filterResources(filters: ResourceFilters): Resource[] {
     }
     return true;
   });
-}
-
-export const COLLECTIONS: CollectionMeta[] = [
-  {
-    slug: "first-day-activities",
-    title: "First Day Activities",
-    description: "Warm, low-pressure activities for meeting a new class.",
-  },
-  {
-    slug: "10-minute-classroom-games",
-    title: "10-Minute Classroom Games",
-    description: "Quick games that fit into any lesson without extra planning.",
-  },
-  {
-    slug: "vocabulary-games",
-    title: "Vocabulary Games",
-    description: "Interactive ways to introduce, practise and review new words.",
-  },
-  {
-    slug: "speaking-activities",
-    title: "Speaking Activities",
-    description: "Discussion, role play and conversation practice for every level.",
-  },
-  {
-    slug: "no-prep-activities",
-    title: "No-Prep Activities",
-    description: "Effective activities that need little to no preparation time.",
-  },
-  {
-    slug: "ielts-speaking-practice",
-    title: "IELTS Speaking Practice",
-    description: "Resources for building fluency and confidence in the Speaking test.",
-  },
-  {
-    slug: "ielts-writing-practice",
-    title: "IELTS Writing Practice",
-    description: "Structured practice for Writing Task 1 and Task 2.",
-  },
-  {
-    slug: "games-for-large-classes",
-    title: "Games for Large Classes",
-    description: "Activities that work well with bigger groups of students.",
-  },
-  {
-    slug: "activities-for-shy-students",
-    title: "Activities for Shy Students",
-    description: "Low-pressure formats that build confidence before whole-class speaking.",
-  },
-  {
-    slug: "teenage-conversation-activities",
-    title: "Teenage Conversation Activities",
-    description: "Discussion and debate activities that teenagers actually enjoy.",
-  },
-];
-
-export function getCollectionBySlug(slug: string): CollectionMeta | undefined {
-  return COLLECTIONS.find((c) => c.slug === slug);
 }

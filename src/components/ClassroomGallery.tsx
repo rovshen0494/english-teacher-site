@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import type { GalleryItem } from "@/content/gallery/classroom-media";
+import type { GalleryItem } from "@/lib/types";
 
 function GalleryTile({ item }: { item: GalleryItem }) {
   const [playing, setPlaying] = useState(false);
@@ -53,7 +53,7 @@ export default function ClassroomGallery({ items }: { items: GalleryItem[] }) {
   return (
     <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 [&>*]:mb-4">
       {items.map((item) => (
-        <div key={item.src} className="break-inside-avoid">
+        <div key={item.id} className="break-inside-avoid">
           <GalleryTile item={item} />
         </div>
       ))}
