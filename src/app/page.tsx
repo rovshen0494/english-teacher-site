@@ -77,7 +77,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <TeacherPhoto priority />
+          <TeacherPhoto priority src="/images/balgyz-mammetyarova-home.png" />
         </Container>
       </section>
 
