@@ -55,14 +55,67 @@ function GalleryTile({ item, onOpen }: { item: GalleryItem; onOpen: () => void }
   );
 }
 
-function Lightbox({ item, onClose }: { item: GalleryItem; onClose: () => void }) {
+function NavButton({
+  direction,
+  onClick,
+}: {
+  direction: "prev" | "next";
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      aria-label={direction === "prev" ? "Previous photo" : "Next photo"}
+      className={`absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 ${
+        direction === "prev" ? "left-2 sm:left-4" : "right-2 sm:right-4"
+      }`}
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        {direction === "prev" ? (
+          <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+        ) : (
+          <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+        )}
+      </svg>
+    </button>
+  );
+}
+
+function Lightbox({
+  photos,
+  index,
+  onClose,
+  onNavigate,
+}: {
+  photos: GalleryItem[];
+  index: number;
+  onClose: () => void;
+  onNavigate: (nextIndex: number) => void;
+}) {
+  const item = photos[index];
+  const canNavigate = photos.length > 1;
+
+  function goPrev() {
+    onNavigate((index - 1 + photos.length) % photos.length);
+  }
+  function goNext() {
+    onNavigate((index + 1) % photos.length);
+  }
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft" && canNavigate) goPrev();
+      if (e.key === "ArrowRight" && canNavigate) goNext();
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, canNavigate]);
 
   return (
     <div
@@ -75,12 +128,20 @@ function Lightbox({ item, onClose }: { item: GalleryItem; onClose: () => void })
         type="button"
         onClick={onClose}
         aria-label="Close"
-        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
         </svg>
       </button>
+
+      {canNavigate && (
+        <>
+          <NavButton direction="prev" onClick={goPrev} />
+          <NavButton direction="next" onClick={goNext} />
+        </>
+      )}
+
       <Image
         src={item.src}
         alt={item.alt}
@@ -95,16 +156,27 @@ function Lightbox({ item, onClose }: { item: GalleryItem; onClose: () => void })
 }
 
 export default function ClassroomGallery({ items }: { items: GalleryItem[] }) {
-  const [lightboxItem, setLightboxItem] = useState<GalleryItem | null>(null);
+  const photos = items.filter((item) => item.type === "photo");
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   return (
     <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 [&>*]:mb-4">
       {items.map((item) => (
         <div key={item.id} className="break-inside-avoid">
-          <GalleryTile item={item} onOpen={() => setLightboxItem(item)} />
+          <GalleryTile
+            item={item}
+            onOpen={() => setLightboxIndex(photos.findIndex((p) => p.id === item.id))}
+          />
         </div>
       ))}
-      {lightboxItem && <Lightbox item={lightboxItem} onClose={() => setLightboxItem(null)} />}
+      {lightboxIndex !== null && (
+        <Lightbox
+          photos={photos}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
+      )}
     </div>
   );
 }
