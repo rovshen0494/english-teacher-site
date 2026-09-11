@@ -4,7 +4,9 @@ import SectionHeading from "@/components/SectionHeading";
 import TeacherPhoto from "@/components/TeacherPhoto";
 import PlaceholderNote from "@/components/PlaceholderNote";
 import Button from "@/components/Button";
+import ClassroomGallery from "@/components/ClassroomGallery";
 import { SITE } from "@/lib/constants";
+import { CLASSROOM_MEDIA } from "@/content/gallery/classroom-media";
 
 export const metadata: Metadata = {
   title: "About Me",
@@ -82,6 +84,19 @@ export default function AboutPage() {
                 <p className="mt-3 text-sm leading-relaxed text-ink-500">{item.description}</p>
               </div>
             ))}
+          </div>
+        </Container>
+      </section>
+
+      <section className="py-16 sm:py-20">
+        <Container>
+          <SectionHeading
+            eyebrow="See It in Action"
+            title="In the Classroom"
+            description="A few real moments from recent lessons — no stock photos."
+          />
+          <div className="mt-10">
+            <ClassroomGallery items={CLASSROOM_MEDIA} />
           </div>
         </Container>
       </section>
