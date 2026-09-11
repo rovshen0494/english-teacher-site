@@ -10,6 +10,10 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  function isActive(href: string) {
+    return pathname === href || (href !== "/" && pathname.startsWith(href));
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-ink-100 bg-background/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
@@ -21,16 +25,19 @@ export default function Navbar() {
           {SITE.name}
         </Link>
 
-        <nav className="hidden items-center gap-5 xl:flex">
+        <nav className="hidden items-center gap-1 xl:flex">
           {NAV_LINKS.map((link) => {
-            const active = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+            const active = isActive(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={active ? "page" : undefined}
                 className={clsx(
-                  "whitespace-nowrap text-sm font-medium transition-colors",
-                  active ? "text-brand-700" : "text-ink-700 hover:text-brand-700"
+                  "whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-brand-50 font-semibold text-brand-700"
+                    : "text-ink-700 hover:bg-brand-50/60 hover:text-brand-700"
                 )}
               >
                 {link.label}
@@ -71,16 +78,23 @@ export default function Navbar() {
       {open && (
         <div className="border-t border-ink-100 bg-background xl:hidden">
           <nav className="flex flex-col gap-1 px-5 py-4">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-base font-medium text-ink-900 hover:bg-brand-50"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={clsx(
+                    "rounded-lg px-3 py-2.5 text-base font-medium transition-colors",
+                    active ? "bg-brand-50 font-semibold text-brand-700" : "text-ink-900 hover:bg-brand-50"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
             <Link
               href="/contact"
               onClick={() => setOpen(false)}
