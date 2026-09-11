@@ -43,9 +43,18 @@ Search the codebase for `[Placeholder` to find what's still unfilled:
 
 `public/images/balgyz-mammetyarova.png` (About page) and `public/images/balgyz-mammetyarova-home.png` (Home hero) are used by the `TeacherPhoto` component. Replace the files directly to update them — no code changes needed as long as the filenames stay the same.
 
+## Contact form
+
+Submissions from the "Get in Touch" form (`src/components/ContactForm.tsx`) POST to `src/app/api/contact/route.ts`, which:
+
+1. Saves the message to the `contact_submissions` table (visible at `/admin/messages`, with unread/read tracking) — this always happens, regardless of email configuration.
+2. If `RESEND_API_KEY` is set, also emails a notification to `bmammet09@gmail.com` and `rovshen0494@gmail.com` via [Resend](https://resend.com), using their shared `onboarding@resend.dev` sender (no domain verification needed). If sending fails or the key isn't set, the submission is still saved — email is a best-effort notification, not the source of truth.
+
+To enable email notifications: create a Resend account, generate an API key (Dashboard → API Keys), and set `RESEND_API_KEY` in `.env.local` and in Vercel's project environment variables.
+
 ## Database schema
 
-See `supabase/migrations/`. Four tables — `resources`, `blog_posts`, `collections`, `gallery_items` — plus a `gallery` Storage bucket. Apply new migrations with:
+See `supabase/migrations/`. Five tables — `resources`, `blog_posts`, `collections`, `gallery_items`, `contact_submissions` — plus a `gallery` Storage bucket. Apply new migrations with:
 
 ```bash
 SUPABASE_ACCESS_TOKEN=... npx supabase db push
@@ -71,4 +80,4 @@ Use the admin panel (`/admin`) — there's no longer a Markdown/file-based workf
 - `src/lib/resources.ts`, `blog.ts`, `collections.ts`, `gallery.ts` are the only places that query Supabase for public content — all pages and admin forms go through these (or the browser Supabase client directly for admin writes).
 - `src/lib/supabase/client.ts` (browser) and `server.ts` (Server Components, via `@supabase/ssr`) are the two ways the app talks to Supabase; `src/proxy.ts` refreshes the auth session on every request and gates `/admin/*`.
 - The AI Resource Generator (`/resources/create`) and AI Lesson Builder (`/resources/lesson-builder`) are UI previews only; no AI API is connected. Wiring one up later means writing a draft row with a `status: "draft"`-style flag for teacher review before publishing — never publishing automatically.
-- The contact form posts to `src/app/api/contact/route.ts`, which currently only logs submissions. Connect a real email provider there before launch.
+- `src/lib/contact.ts` reads contact submissions for the admin panel (admin-only via RLS); the public `insert` policy on `contact_submissions` allows anyone to submit the form itself.
