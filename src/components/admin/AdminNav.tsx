@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/admin/blog", label: "Blog" },
   { href: "/admin/collections", label: "Collections" },
   { href: "/admin/gallery", label: "Gallery" },
+  { href: "/admin/live-quiz", label: "Live Quiz" },
   { href: "/admin/messages", label: "Messages" },
 ];
 

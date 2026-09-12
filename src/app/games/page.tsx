@@ -21,6 +21,22 @@ export default function GamesHubPage() {
         description="Real, playable games you can jump into right now — no downloads, no sign-up. Pick a game, choose a topic, and start practising."
       />
 
+      <div className="mt-8 flex flex-col items-start gap-4 rounded-2xl border border-brand-200 bg-brand-50 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <span className="text-3xl">📱</span>
+          <div>
+            <p className="font-display font-semibold text-ink-900">In class right now?</p>
+            <p className="text-sm text-ink-500">If your teacher started a live quiz, join it here with the room code.</p>
+          </div>
+        </div>
+        <Link
+          href="/play"
+          className="inline-flex shrink-0 items-center justify-center rounded-full bg-accent-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-600"
+        >
+          Join a Live Quiz
+        </Link>
+      </div>
+
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {GAMES.map((game) => (
           <Link

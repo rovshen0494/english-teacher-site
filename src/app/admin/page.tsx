@@ -4,12 +4,14 @@ import { getAllPosts } from "@/lib/blog";
 import { getCollections } from "@/lib/collections";
 import { getGalleryItems } from "@/lib/gallery";
 import { getContactSubmissions } from "@/lib/contact";
+import { WORD_SETS } from "@/content/games/word-sets";
 
 const CARDS = [
   { key: "resources", title: "Resources", href: "/admin/resources", description: "Games, lesson plans, worksheets and IELTS/TOEFL materials." },
   { key: "blog", title: "Blog Posts", href: "/admin/blog", description: "Articles linked to resources in the library." },
   { key: "collections", title: "Collections", href: "/admin/collections", description: "Themed groupings of resources." },
   { key: "gallery", title: "Gallery", href: "/admin/gallery", description: "Classroom photos and videos shown on the About page." },
+  { key: "liveQuiz", title: "Live Quiz", href: "/admin/live-quiz", description: "Start a Kahoot-style round students join by QR code." },
   { key: "messages", title: "Messages", href: "/admin/messages", description: "Contact form submissions from the site." },
 ] as const;
 
@@ -29,6 +31,7 @@ export default async function AdminDashboard() {
     blog: posts.length,
     collections: collections.length,
     gallery: gallery.length,
+    liveQuiz: WORD_SETS.length,
     messages: messages.length,
   };
 

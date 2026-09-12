@@ -54,9 +54,20 @@ Submissions from the "Get in Touch" form (`src/components/ContactForm.tsx`) POST
 
 To (re)configure: create a Resend account, generate an API key (Dashboard → API Keys), and set `RESEND_API_KEY` in `.env.local` and in Vercel's project environment variables.
 
+## Live Quiz (Kahoot-style multiplayer)
+
+From `/admin/live-quiz`, pick a vocabulary topic to start a live round. Students join at `/play` (room code) or by scanning the QR code shown on the host screen (`/admin/live-quiz/[id]/host`), then answer along on their own phones while the host screen shows the shared question, timer, and leaderboard.
+
+Key design points:
+
+- **Question content is reused from the existing vocabulary word-sets** (`src/content/games/word-sets.ts`), not authored separately — a session just stores a shuffled word order for a topic, and every client (host + players) derives the question text, image and correct answer from the same static data. This means there's no new content-authoring UI, but it also means **the server can't independently verify whether an answer was correct** (the client self-reports `is_correct` to the `submit_answer` RPC). Fine for a casual classroom game; not appropriate if this were ever repurposed into a graded assessment.
+- **Scoring, duplicate-answer prevention, and timing are still server-enforced** via the `submit_answer` Postgres function (`SECURITY DEFINER`) — it uses the *server's* clock against `game_sessions.question_started_at` to compute time-based points (500–1000 for a correct answer, faster = more), and rejects a second answer from the same player on the same question.
+- **Realtime sync** (host screen ↔ player phones ↔ live scoreboard) uses Supabase Realtime's Postgres Changes on `game_sessions`, `game_players` and `game_answers` — all three are added to the `supabase_realtime` publication in `0004_live_quiz.sql`.
+- Room codes are short (6 chars, ambiguous characters like `0`/`O`/`1`/`I` excluded) and public-readable — anyone who has the code or QR image can join, matching how Kahoot itself works.
+
 ## Database schema
 
-See `supabase/migrations/`. Five tables — `resources`, `blog_posts`, `collections`, `gallery_items`, `contact_submissions` — plus a `gallery` Storage bucket. Apply new migrations with:
+See `supabase/migrations/`. Tables: `resources`, `blog_posts`, `collections`, `gallery_items`, `contact_submissions`, `game_sessions`, `game_players`, `game_answers` — plus a `gallery` Storage bucket. Apply new migrations with:
 
 ```bash
 SUPABASE_ACCESS_TOKEN=... npx supabase db push

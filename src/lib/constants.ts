@@ -4,7 +4,7 @@ export const SITE = {
   name: "Balgyz Mammetyarova",
   role: "English Teacher & Exam Prep Instructor",
   location: "Ho Chi Minh City, Vietnam",
-  url: "https://example.com",
+  url: "https://english-teacher-site-sable.vercel.app",
   email: "bmammet09@gmail.com",
   description:
     "Professional English teacher based in Ho Chi Minh City, Vietnam, working with young learners, teenagers, adults and IELTS/TOEFL exam candidates. Explore a growing library of classroom-ready English teaching resources.",
