@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import QRCode from "qrcode";
@@ -106,6 +106,13 @@ export default function HostView({ sessionId }: { sessionId: string }) {
     QUESTION_TIME_LIMIT_SECONDS
   );
 
+  const currentWord = session ? session.questionOrder[session.currentQuestionIndex] : undefined;
+  const topic = session?.topic;
+  const options = useMemo(
+    () => (topic && currentWord ? buildQuestionOptions(topic, currentWord) : []),
+    [topic, currentWord]
+  );
+
   if (notFound) {
     return (
       <div>
@@ -158,9 +165,7 @@ export default function HostView({ sessionId }: { sessionId: string }) {
   }
 
   const isLastQuestion = session.currentQuestionIndex >= session.questionOrder.length - 1;
-  const currentWord = session.questionOrder[session.currentQuestionIndex];
   const questionData = currentWord ? getQuestionWord(session.topic, currentWord) : undefined;
-  const options = currentWord ? buildQuestionOptions(session.topic, currentWord) : [];
 
   return (
     <div className="mx-auto max-w-4xl">

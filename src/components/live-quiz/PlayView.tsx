@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -147,6 +147,13 @@ export default function PlayView({ roomCode }: { roomCode: string }) {
     QUESTION_TIME_LIMIT_SECONDS
   );
 
+  const currentWord = session ? session.questionOrder[session.currentQuestionIndex] : undefined;
+  const topic = session?.topic;
+  const options = useMemo(
+    () => (topic && currentWord ? buildQuestionOptions(topic, currentWord) : []),
+    [topic, currentWord]
+  );
+
   if (loading) {
     return <p className="p-8 text-center text-sm text-ink-500">Loading...</p>;
   }
@@ -192,9 +199,6 @@ export default function PlayView({ roomCode }: { roomCode: string }) {
       </div>
     );
   }
-
-  const currentWord = session.questionOrder[session.currentQuestionIndex];
-  const options = currentWord ? buildQuestionOptions(session.topic, currentWord) : [];
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center">
